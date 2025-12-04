@@ -29,7 +29,6 @@ $datos_lista = null;
 
 /*Buscar usuario*/
 function buscar($con, $id) {
-    // Se añade 'contrasena' a la búsqueda para actualizar y eliminar
     $stmt = $con->prepare("SELECT * FROM usuarios WHERE id = ?"); 
     $stmt->bind_param("i", $id);
     $stmt->execute();
@@ -43,18 +42,15 @@ if (isset($_POST['crear'])) {
     $nombre = $_POST['nombre'];
     $email = $_POST['email'];
     $telefono = $_POST['telefono'];
-    // CAMBIO: Se captura la contraseña ingresada por el administrador
     $contrasena = $_POST['contrasena']; 
 
-    // $contrasena_default se elimina
     $rol_default = 'usuario';
 
     $stmt = $con->prepare("INSERT INTO usuarios (nombre, email, telefono, contrasena, rol) VALUES (?, ?, ?, ?, ?)");
-    // CAMBIO: Se usa $contrasena en bind_param
+    //Se usa $contrasena en bind_param
     $stmt->bind_param("sssss", $nombre, $email, $telefono, $contrasena, $rol_default); 
 
     if ($stmt->execute()) {
-        // CAMBIO: Mensaje indica la contraseña ingresada
         $mensaje = "Usuario registrado correctamente con rol 'usuario' (contraseña: " . htmlspecialchars($contrasena) . ").";
     } else {
         $mensaje = "Error al registrar: " . $stmt->error;
@@ -144,7 +140,6 @@ if ($mensaje) {
     echo "<p class='p-3 rounded-lg bg-green-100 border-l-4 border-green-500 text-green-700 font-semibold mb-6'>" . $mensaje . "</p>";
 }
 
-// CAMBIO: Se añade 'contrasena' a la consulta SELECT para listarla
 $datos_lista = $con->query("SELECT id, nombre, email, telefono, contrasena, rol FROM usuarios ORDER BY id DESC"); 
 ?>
 
@@ -247,7 +242,6 @@ $datos_lista = $con->query("SELECT id, nombre, email, telefono, contrasena, rol 
             <tr><td colspan='6' class='border border-gray-200 p-3 text-center text-gray-500'>Sin datos de usuarios en la base de datos.</td></tr>
         <?php endif; ?>
         <?php 
-        //Cierra la conexión al final de la renderización de datos
         $con->close(); 
         ?>
         </tbody>
