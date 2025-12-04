@@ -47,7 +47,7 @@ if (isset($_POST['crear'])) {
     $rol_default = 'usuario';
 
     $stmt = $con->prepare("INSERT INTO usuarios (nombre, email, telefono, contrasena, rol) VALUES (?, ?, ?, ?, ?)");
-    //Se usa $contrasena en bind_param
+    //Se usa bind_param
     $stmt->bind_param("sssss", $nombre, $email, $telefono, $contrasena, $rol_default); 
 
     if ($stmt->execute()) {
