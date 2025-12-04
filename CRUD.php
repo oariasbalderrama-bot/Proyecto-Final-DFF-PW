@@ -29,7 +29,8 @@ $datos_lista = null;
 
 /*Buscar usuario*/
 function buscar($con, $id) {
-    $stmt = $con->prepare("SELECT * FROM usuarios WHERE id = ?");
+    // Se añade 'contrasena' a la búsqueda para actualizar y eliminar
+    $stmt = $con->prepare("SELECT * FROM usuarios WHERE id = ?"); 
     $stmt->bind_param("i", $id);
     $stmt->execute();
     $resultado = $stmt->get_result();
@@ -42,15 +43,19 @@ if (isset($_POST['crear'])) {
     $nombre = $_POST['nombre'];
     $email = $_POST['email'];
     $telefono = $_POST['telefono'];
+    // CAMBIO: Se captura la contraseña ingresada por el administrador
+    $contrasena = $_POST['contrasena']; 
 
-    $contrasena_default = 'password'; 
+    // $contrasena_default se elimina
     $rol_default = 'usuario';
 
     $stmt = $con->prepare("INSERT INTO usuarios (nombre, email, telefono, contrasena, rol) VALUES (?, ?, ?, ?, ?)");
-    $stmt->bind_param("sssss", $nombre, $email, $telefono, $contrasena_default, $rol_default);
+    // CAMBIO: Se usa $contrasena en bind_param
+    $stmt->bind_param("sssss", $nombre, $email, $telefono, $contrasena, $rol_default); 
 
     if ($stmt->execute()) {
-        $mensaje = "Usuario registrado correctamente con rol 'usuario' (contraseña: password).";
+        // CAMBIO: Mensaje indica la contraseña ingresada
+        $mensaje = "Usuario registrado correctamente con rol 'usuario' (contraseña: " . htmlspecialchars($contrasena) . ").";
     } else {
         $mensaje = "Error al registrar: " . $stmt->error;
     }
@@ -139,8 +144,8 @@ if ($mensaje) {
     echo "<p class='p-3 rounded-lg bg-green-100 border-l-4 border-green-500 text-green-700 font-semibold mb-6'>" . $mensaje . "</p>";
 }
 
-//Cargar la lista de usuarios
-$datos_lista = $con->query("SELECT id, nombre, email, telefono, rol FROM usuarios ORDER BY id DESC");
+// CAMBIO: Se añade 'contrasena' a la consulta SELECT para listarla
+$datos_lista = $con->query("SELECT id, nombre, email, telefono, contrasena, rol FROM usuarios ORDER BY id DESC"); 
 ?>
 
 <div id="crear" class="tarjeta bg-white p-6 rounded-xl shadow-lg mb-6 hidden">
@@ -149,6 +154,7 @@ $datos_lista = $con->query("SELECT id, nombre, email, telefono, rol FROM usuario
         <input type="text" name="nombre" placeholder="Nombre" required class="p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
         <input type="email" name="email" placeholder="Email" required class="p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
         <input type="text" name="telefono" placeholder="Teléfono" required class="p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+        <input type="text" name="contrasena" placeholder="Contraseña para el usuario" required class="p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
         <input type="submit" name="crear" value="Registrar" class="bg-blue-600 text-white p-3 rounded-lg font-bold cursor-pointer hover:bg-blue-700 transition duration-150">
     </form>
 </div>
@@ -166,6 +172,7 @@ $datos_lista = $con->query("SELECT id, nombre, email, telefono, rol FROM usuario
         <p class="mb-2"><b>Nombre:</b> <?=htmlspecialchars($buscado['nombre'])?></p>
         <p class="mb-2"><b>Email:</b> <?=htmlspecialchars($buscado['email'])?></p>
         <p class="mb-2"><b>Teléfono:</b> <?=htmlspecialchars($buscado['telefono'])?></p>
+        <p class="mb-2"><b>Contraseña:</b> <?=htmlspecialchars($buscado['contrasena'])?></p>
         <p class="mb-2"><b>Rol:</b> <?=htmlspecialchars($buscado['rol'])?></p>
     </div>
     <?php endif; ?>
@@ -219,6 +226,7 @@ $datos_lista = $con->query("SELECT id, nombre, email, telefono, rol FROM usuario
                 <th class="border border-blue-400 p-3 text-left">Nombre</th>
                 <th class="border border-blue-400 p-3 text-left">Email</th>
                 <th class="border border-blue-400 p-3 text-left">Teléfono</th>
+                <th class="border border-blue-400 p-3 text-left">Contraseña</th>
                 <th class="border border-blue-400 p-3 text-left">Rol</th>
             </tr>
         </thead>
@@ -231,11 +239,12 @@ $datos_lista = $con->query("SELECT id, nombre, email, telefono, rol FROM usuario
                     <td class="border border-gray-200 p-3"><?=htmlspecialchars($usuario['nombre'])?></td>
                     <td class="border border-gray-200 p-3"><?=htmlspecialchars($usuario['email'])?></td>
                     <td class="border border-gray-200 p-3"><?=htmlspecialchars($usuario['telefono'])?></td>
+                    <td class="border border-gray-200 p-3 font-mono text-xs"><?=htmlspecialchars($usuario['contrasena'])?></td> 
                     <td class="border border-gray-200 p-3 font-semibold <?=($usuario['rol'] == 'administrador' ? 'text-red-500' : 'text-green-600')?>"><?=htmlspecialchars($usuario['rol'])?></td>
                 </tr>
             <?php endwhile; 
             else: ?>
-            <tr><td colspan='5' class='border border-gray-200 p-3 text-center text-gray-500'>Sin datos de usuarios en la base de datos.</td></tr>
+            <tr><td colspan='6' class='border border-gray-200 p-3 text-center text-gray-500'>Sin datos de usuarios en la base de datos.</td></tr>
         <?php endif; ?>
         <?php 
         //Cierra la conexión al final de la renderización de datos
